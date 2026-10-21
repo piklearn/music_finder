@@ -107,7 +107,8 @@ button:disabled { opacity: .5; cursor: default; }
 .chip.on { color: var(--text); border-color: #34d39955; }
 
 .muted { color: var(--muted); }
-.row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .8rem; }
+.row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .8rem; align-items: center; }
+.row input[type="file"] { max-width: 320px; color: var(--muted); font-size: .85rem; }
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 1rem; }
 .grid-2.tight { gap: .55rem 1rem; }
 .form { display: flex; flex-direction: column; gap: .5rem; }

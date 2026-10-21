@@ -524,5 +524,62 @@ $("#clear-cache").addEventListener("click", async () => {
   toast("کش صفحات پاک شد");
 });
 
+/* ------------------------------------------------------- import / export */
+function importMode() {
+  const checked = document.querySelector('input[name="import-mode"]:checked');
+  return checked ? checked.value : "merge";
+}
+
+$("#export-yaml").addEventListener("click", () => {
+  window.location.href = "/api/sites/export?format=yaml";
+});
+
+$("#export-json").addEventListener("click", () => {
+  window.location.href = "/api/sites/export?format=json";
+});
+
+$("#export-copy").addEventListener("click", async () => {
+  try {
+    const res = await fetch("/api/sites/export?format=yaml");
+    const text = await res.text();
+    await navigator.clipboard.writeText(text);
+    toast("کانفیگ کپی شد");
+  } catch (err) {
+    toast("کپی نشد", true);
+  }
+});
+
+$("#import-btn").addEventListener("click", async () => {
+  const input = $("#import-file");
+  if (!input.files || !input.files.length) {
+    toast("اول یک فایل YAML/JSON انتخاب کن", true);
+    return;
+  }
+  const file = input.files[0];
+  const content = await file.text();
+  const btn = $("#import-btn");
+  btn.disabled = true;
+  btn.textContent = "در حال ورود…";
+  try {
+    const data = await api("/api/sites/import", {
+      method: "POST",
+      body: JSON.stringify({ content, mode: importMode() }),
+    });
+    const skipped = (data.skipped || []).map((s) => escapeHtml(s)).join("<br />");
+    $("#import-report").innerHTML =
+      `<div>✔ ${data.imported} پروفایل وارد شد (${data.mode === "replace" ? "جایگزینی" : "افزودن"})؛ مجموع: ${data.total}</div>` +
+      (skipped ? `<div style="margin-top:.4rem">رد شده:<br />${skipped}</div>` : "");
+    toast(`${data.imported} پروفایل وارد شد`);
+    input.value = "";
+    await loadSites();
+  } catch (err) {
+    $("#import-report").innerHTML = `<div>✖ ${escapeHtml(err.message)}</div>`;
+    toast(err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "ورود از فایل";
+  }
+});
+
 /* ------------------------------------------------------------------ init */
 loadSites();

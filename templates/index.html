@@ -109,6 +109,30 @@
 
       <div class="card">
         <div class="card-head">
+          <h2>ورود / خروج کانفیگ سایت‌ها</h2>
+        </div>
+        <p class="muted small">
+          کانفیگ پروفایل‌ها را به‌صورت YAML یا JSON خروجی بگیر و روی سیستم دیگر وارد کن.
+          در حالت «افزودن» سایت‌های هم‌نام به‌روزرسانی می‌شوند و در حالت «جایگزینی» کل لیست عوض می‌شود.
+        </p>
+        <div class="row">
+          <button id="export-yaml" class="ghost">خروج YAML</button>
+          <button id="export-json" class="ghost">خروج JSON</button>
+          <button id="export-copy" class="ghost">کپی YAML در کلیپ‌بورد</button>
+        </div>
+        <div class="row">
+          <input type="file" id="import-file" accept=".yaml,.yml,.json,text/yaml,application/json" />
+          <button id="import-btn" class="primary">ورود از فایل</button>
+        </div>
+        <div class="row">
+          <label class="inline"><input type="radio" name="import-mode" value="merge" checked /> افزودن به لیست فعلی</label>
+          <label class="inline"><input type="radio" name="import-mode" value="replace" /> جایگزینی کامل لیست</label>
+        </div>
+        <div id="import-report" class="notes"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
           <h2>سایت‌های من</h2>
           <button id="clear-cache" class="ghost small">پاک کردن کش</button>
         </div>

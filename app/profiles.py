@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import threading
 from pathlib import Path
 
@@ -72,3 +73,49 @@ class SiteStore:
                 return False
             self._write(kept)
         return True
+
+    def replace(self, profiles: list[SiteProfile]) -> None:
+        with self._lock:
+            self._write(profiles)
+
+
+def parse_profiles(content: str) -> tuple[list[SiteProfile], list[str]]:
+    """Parse an exported YAML/JSON config into profiles + a list of problems."""
+    text = (content or "").strip()
+    if not text:
+        return [], ["فایل خالی است"]
+
+    data = None
+    errors: list[str] = []
+    try:
+        if text.startswith("{") or text.startswith("["):
+            data = json.loads(text)
+        else:
+            data = yaml.safe_load(text)
+    except json.JSONDecodeError as exc:
+        return [], [f"JSON نامعتبر: {exc}"]
+    except yaml.YAMLError as exc:
+        return [], [f"YAML نامعتبر: {exc}"]
+
+    if isinstance(data, dict):
+        items = data.get("sites", data.get("profiles", []))
+    elif isinstance(data, list):
+        items = data
+    else:
+        return [], ["ساختار فایل شناسایی نشد (انتظار: کلید sites یا یک لیست)"]
+
+    if not isinstance(items, list):
+        return [], ["مقدار sites باید یک لیست باشد"]
+
+    profiles: list[SiteProfile] = []
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            errors.append(f"مورد {index}: یک شیء نیست")
+            continue
+        try:
+            profiles.append(SiteProfile(**item))
+        except Exception as exc:
+            label = item.get("id", f"مورد {index}")
+            errors.append(f"{label}: {exc}")
+
+    return profiles, errors

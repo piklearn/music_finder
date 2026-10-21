@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class SiteProfile(BaseModel):
@@ -22,6 +22,13 @@ class SiteProfile(BaseModel):
     charset: str = ""
     enabled: bool = True
     notes: str = ""
+
+    @field_validator("search_url")
+    @classmethod
+    def search_url_needs_placeholder(cls, value: str) -> str:
+        if "{query}" not in value:
+            raise ValueError("search_url باید شامل {query} باشد")
+        return value
 
 
 class SiteUpdate(SiteProfile):
@@ -45,3 +52,8 @@ class SearchRequest(BaseModel):
 class TestRequest(BaseModel):
     query: str = Field(min_length=1)
     verify: bool = False
+
+
+class ImportRequest(BaseModel):
+    content: str = ""
+    mode: Literal["merge", "replace"] = "merge"

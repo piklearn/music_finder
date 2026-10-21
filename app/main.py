@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import yaml
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from . import lyrics
@@ -12,8 +14,8 @@ from .cache import Cache
 from .fetcher import Fetcher, FetchError, RobotsDenied
 from .history import History
 from .infer import infer_all
-from .models import InferRequest, SearchRequest, SiteProfile, TestRequest
-from .profiles import SiteStore
+from .models import ImportRequest, InferRequest, SearchRequest, SiteProfile, TestRequest
+from .profiles import SiteStore, parse_profiles
 from .resolve import resolve_site
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -80,6 +82,49 @@ async def delete_site(site_id: str) -> dict:
     if not store.delete(site_id):
         raise HTTPException(status_code=404, detail="سایت پیدا نشد")
     return {"ok": True}
+
+
+@app.get("/api/sites/export")
+async def export_sites(format: str = "yaml") -> Response:
+    """Download all site profiles as a portable YAML/JSON config."""
+    profiles = [p.model_dump() for p in store.list()]
+    if format == "json":
+        body = json.dumps({"sites": profiles}, ensure_ascii=False, indent=2)
+        media_type = "application/json"
+        filename = "music-finder-sites.json"
+    else:
+        body = "# Music Finder site profiles\n\n" + yaml.safe_dump(
+            {"sites": profiles}, allow_unicode=True, sort_keys=False
+        )
+        media_type = "application/yaml; charset=utf-8"
+        filename = "music-finder-sites.yaml"
+    return Response(
+        content=body,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.post("/api/sites/import")
+async def import_sites(payload: ImportRequest) -> dict:
+    """Import site profiles from a YAML/JSON config (merge or replace)."""
+    profiles, errors = parse_profiles(payload.content)
+    if not profiles and errors:
+        raise HTTPException(status_code=400, detail="؛ ".join(errors))
+
+    if payload.mode == "replace":
+        store.replace(profiles)
+    else:
+        for profile in profiles:
+            store.upsert(profile)
+
+    return {
+        "ok": True,
+        "mode": payload.mode,
+        "imported": len(profiles),
+        "skipped": errors,
+        "total": len(store.list()),
+    }
 
 
 @app.post("/api/sites/infer")
