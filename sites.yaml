@@ -1,0 +1,47 @@
+# Music Finder site profiles.
+# Each entry is a reusable recipe: search URL + CSS selectors.
+# Edit this file by hand or from the web UI.
+
+sites:
+- id: musics-mehr-com
+  name: musics-mehr-com
+  base: https://musics-mehr.com
+  search_url: https://musics-mehr.com/search/{query}/
+  result_selector: article
+  title_selector: a
+  artist_selector: ''
+  detail_link_selector: a
+  download_selector: a.musicmehr-download-link
+  download_on: detail
+  render: http
+  charset: ''
+  enabled: true
+  notes: ''
+- id: sahand-music-ir
+  name: sahand-music-ir
+  base: https://sahand-music.ir
+  search_url: https://sahand-music.ir/search/{query}
+  result_selector: div.posts
+  title_selector: a
+  artist_selector: ''
+  detail_link_selector: a
+  download_selector: a[href*="download"]
+  download_on: detail
+  render: http
+  charset: ''
+  enabled: true
+  notes: ''
+- id: nicmusic-net
+  name: nicmusic-net
+  base: https://nicmusic.net
+  search_url: https://nicmusic.net/?s={query}
+  result_selector: article
+  title_selector: article a
+  artist_selector: ''
+  detail_link_selector: span a
+  download_selector: a[href*="download"]
+  download_on: detail
+  render: http
+  charset: ''
+  enabled: true
+  notes: ''
